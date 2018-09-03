@@ -6,44 +6,59 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+//import jdk.incubator.http.HttpRequest;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+//import java.net.URI;
+//import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Main {
 
-  public static void main(String[] args) {
-    // write your code here
-    String
-      filename =
-      "/home/akddombrowski/Pictures/scryfall-default" + "-cards.json";
-    String
-      dirTrainCommon =
-      "/home/akddombrowski/Pictures/mtgpicdownload/train/common/";
-    String
-      dirTrainUncommon =
-      "/home/akddombrowski/Pictures/mtgpicdownload/train/uncommon/";
-    String
-      dirValidCommon =
-      "/home/akddombrowski/Pictures/mtgpicdownload/valid/common/";
-    String
-      dirValidUncommon =
-      "/home/akddombrowski/Pictures/mtgpicdownload/valid/uncommon/";
+  private static final String FASTAI_DIR = "C:\\Users\\adombrowski\\Documents\\fastai\\";
 
-    File jsonFile = new File(filename);
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    List<JsonElement> jsonObjects = new ArrayList<>();
+  private static final String MTGPICS_DIR = FASTAI_DIR + "data\\mtgpics\\";
+
+  String s = "C:\\Users\\adombrowski\\Documents\\fastai\\data\\mtgpics";
+
+  public static void main(String[] args) {
+    final String
+            jsonFilename = MTGPICS_DIR + "scryfall-oracle-cards_Sep_2_2018.json";
+    final String
+            dirTrainCommon =
+            MTGPICS_DIR + "train\\common\\";
+    final String
+            dirTrainUncommon =
+            MTGPICS_DIR + "train\\uncommon\\";
+
+    final String
+            dirValidCommon =
+            MTGPICS_DIR + "valid\\common\\";
+
+    final String
+            dirValidUncommon =
+            MTGPICS_DIR + "valid\\uncommon\\";
 
     try {
+      //
+//      TODO: Get the JSON file from scryfall.com api programatically if need a new version
+//      HttpRequest httpRequest =
+//              HttpRequest.newBuilder()
+//                      .uri(new URI("GET https://api.scryfall.com/bulk-data\n"))
+//                      .GET()
+//                      .build();
+
       String
         jsonObjectsStringList =
-        new String(Files.readAllBytes(Paths.get(filename)));
+        new String(Files.readAllBytes(Paths.get(jsonFilename)));
       JsonParser parser = new JsonParser();
       JsonElement element = null;
 
@@ -56,39 +71,86 @@ public class Main {
       File destDirCommon = null;
       File destDirUnCommon = null;
       File destFile = null;
+
+      Set<String> oracleIdsSeen = new HashSet<>();
+
       for (JsonElement element1 : el) {
         try {
-          // Roughly a 1/3 of the images will go to the valid directory
-          // and the other 2/3 to the train directory.
-          if (count % 3 == 0) {
-            count++;
+          final JsonObject object = element1.getAsJsonObject();
+
+          // Check by oracle id if we've already looked at this card.
+          if (!oracleIdsSeen.add(object.get("oracle_id").getAsString())) {
+            // We've already looked at this card.
+            System.out.println("repeat card read");
             continue;
-            // destDirCommon = dirFileValidCommon;
-            // destDirUnCommon = dirFileValidUncommon;
+          }
+
+          // Unlimited Ed. cards can look a little different.
+          if (object.has("set_name") && object.get("set_name").getAsString().equalsIgnoreCase("Unlimited Edition")) {
+            continue;
+          }
+
+          // Tokens, promos, and other esoteric objects don't have these identifiers. Skip them.
+          if (!object.has("multiverse_ids")) {
+            continue;
+          }
+
+          double percentageComplete = (double) count / (double) el.size() * 100.00;
+          System.out.print("***************");
+          System.out.printf("\t %.2f %% complete. (%d/%d) \t", percentageComplete, count, el.size());
+          System.out.println("***************");
+
+          // Roughly a 20% of the images will go to the valid directory
+          // and the other 80% to the train directory.
+          if (count % 5 == 0) {
+            count++;
+             destDirCommon = dirFileValidCommon;
+             destDirUnCommon = dirFileValidUncommon;
           } else {
             destDirCommon = dirFileTrainCommon;
             destDirUnCommon = dirFileTrainUncommon;
           }
-          JsonObject object = element1.getAsJsonObject();
+
+          // This gets images based on the existence of the rarity tag.
           if (object.has("rarity")) {
             String rarityLevel = object.get("rarity").getAsString();
             String imageURI = getPNGImageURI(object);
+
+            // We're looking at cards of rarity common and uncommon.
             if (rarityLevel.equalsIgnoreCase("common")) {
+
+              String imgFilename = object.get("name").getAsString() + ".png";
               destFile =
-                new File(destDirCommon,
-                  object.get("name").getAsString() + ".png");
+                new File(destDirCommon, imgFilename);
+
+              if (destFile.exists()) {
+                System.out.println("Already have img.");
+                continue;
+              }
+
               FileUtils.copyURLToFile(new URL(imageURI), destFile,
                 // connect timeout 5min
                 (1_000 * 60 * 5),
                 // read timeout 5min
                 (1_000 * 60 * 5));
-              System.out.println(destDirCommon.toString());
+
+
               System.out.println("common");
+              System.out.println(destDirCommon.toString());
               System.out.println(imageURI);
+              System.out.println();
+
             } else if (rarityLevel.equalsIgnoreCase("uncommon")) {
+
+              String imgFilename = object.get("name").getAsString() + ".png";
               destFile =
-                new File(destDirUnCommon,
-                  object.get("name").getAsString() + ".png");
+                new File(destDirUnCommon, imgFilename);
+
+              if (destFile.exists()) {
+                System.out.println("Already have img.");
+                continue;
+              }
+
               FileUtils.copyURLToFile(new URL(imageURI),
                 destFile,
                 (1_000 * 60 * 5),
@@ -96,14 +158,15 @@ public class Main {
                 (1_000 * 60 * 5)
                 // read timeout 5min
               );
-              System.out.println(destDirUnCommon.toString());
+
               System.out.println("uncommon");
+              System.out.println(destDirUnCommon.toString());
               System.out.println(imageURI);
+              System.out.println();
             }
           }
 
           count++;
-
         } catch (Exception exc) {
           System.err.println("Couldn't get png image from " +
                                element1.toString());
@@ -115,9 +178,7 @@ public class Main {
        if (el.isJsonArray()) {
          for (JsonElement ele : el) {
            if (ele.isJsonObject() && ele.getAsJsonObject().has("image_uris")){
-             System.out.println(ele.getAsJsonObject(new
-                                                      JsonElement
-                                                      ("image_uris")));
+             System.out.println(ele.getAsJsonObject());
 
            }
          }
