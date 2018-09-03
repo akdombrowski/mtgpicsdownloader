@@ -112,16 +112,16 @@ public class Main {
       }
 
 
-      // if (el.isJsonArray()) {
-      //   for (JsonElement ele : el) {
-      //     if (ele.isJsonObject() && ele.getAsJsonObject().has("image_uris")){
-      //       System.out.println(ele.getAsJsonObject(new
-      //                                                JsonElement
-      //                                                ("image_uris")));
-      //
-      //     }
-      //   }
-      // }
+       if (el.isJsonArray()) {
+         for (JsonElement ele : el) {
+           if (ele.isJsonObject() && ele.getAsJsonObject().has("image_uris")){
+             System.out.println(ele.getAsJsonObject(new
+                                                      JsonElement
+                                                      ("image_uris")));
+
+           }
+         }
+       }
 
     } catch (IOException e) {
       System.err.println("Couldn't read all json objects from file.");
