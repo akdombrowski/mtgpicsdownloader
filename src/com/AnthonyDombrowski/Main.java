@@ -27,7 +27,7 @@ public class Main {
 
   private static final String W_MTGPICS_DIR = FASTAI_DIR + "data\\mtgpics\\";
 
-  private staic final String L_MTGPICS_DIR = "~/data/mtgpics"
+  private static final String L_MTGPICS_DIR = "~/data/mtgpics"
 
   String s = "C:\\Users\\adombrowski\\Documents\\fastai\\data\\mtgpics";
 
