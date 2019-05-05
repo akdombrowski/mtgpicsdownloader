@@ -54,7 +54,7 @@ public class Main {
     final List<String> rarityPaths = new ArrayList<>();
 
     for ( i = 0; i < rarities.length; i++) {
-      rarityPaths.add(L_MTGPICS_DIR + rarities[i]);
+      rarityPaths.add(L_MTGPICS_DIR + "/" + rarities[i]);
     }
 
     try {
@@ -74,10 +74,10 @@ public class Main {
 
       JsonArray el = parser.parse(jsonObjectsStringList).getAsJsonArray();
       int count = 0;
-      File dirFileTrainCommon = new File(dirTrainCommon);
-      File dirFileValidCommon = new File(dirValidCommon);
-      File dirFileTrainUncommon = new File(dirTrainUncommon);
-      File dirFileValidUncommon = new File(dirValidUncommon);
+      // File dirFileTrainCommon = new File(dirTrainCommon);
+      // File dirFileValidCommon = new File(dirValidCommon);
+      // File dirFileTrainUncommon = new File(dirTrainUncommon);
+      // File dirFileValidUncommon = new File(dirValidUncommon);
       File destDirCommon = null;
       File destDirUnCommon = null;
       File destFile = null;
@@ -109,17 +109,6 @@ public class Main {
           System.out.print("***************");
           System.out.printf("\t %.2f %% complete. (%d/%d) \t", percentageComplete, count, el.size());
           System.out.println("***************");
-
-          // Roughly a 20% of the images will go to the valid directory
-          // and the other 80% to the train directory.
-          // if (count % 5 == 0) {
-          //   count++;
-          //    destDirCommon = dirFileValidCommon;
-          //    destDirUnCommon = dirFileValidUncommon;
-          // } else {
-          //   destDirCommon = dirFileTrainCommon;
-          //   destDirUnCommon = dirFileTrainUncommon;
-          // }
 
           // This gets images based on the existence of the rarity tag.
           if (object.has("rarity")) {
