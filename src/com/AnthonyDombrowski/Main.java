@@ -23,29 +23,39 @@ import java.util.Set;
 
 public class Main {
 
-  private static final String FASTAI_DIR = "C:\\Users\\adombrowski\\Documents\\fastai\\";
+  private static final String W_FASTAI_DIR = "C:\\Users\\adombrowski\\Documents\\fastai\\";
 
-  private static final String MTGPICS_DIR = FASTAI_DIR + "data\\mtgpics\\";
+  private static final String W_MTGPICS_DIR = FASTAI_DIR + "data\\mtgpics\\";
+
+  private staic final String L_MTGPICS_DIR = "~/data/mtgpics"
 
   String s = "C:\\Users\\adombrowski\\Documents\\fastai\\data\\mtgpics";
 
   public static void main(String[] args) {
     final String
-            jsonFilename = MTGPICS_DIR + "scryfall-oracle-cards_Sep_2_2018.json";
-    final String
-            dirTrainCommon =
-            MTGPICS_DIR + "train\\common\\";
-    final String
-            dirTrainUncommon =
-            MTGPICS_DIR + "train\\uncommon\\";
+            jsonFilename = L_MTGPICS_DIR + "/scryfall-oracle-cards_May_5_2019.json";
+    // final String
+    //         dirTrainCommon =
+    //         MTGPICS_DIR + "train/common";
+    // final String
+    //         dirTrainUncommon =
+    //         MTGPICS_DIR + "train/uncommon";
 
-    final String
-            dirValidCommon =
-            MTGPICS_DIR + "valid\\common\\";
+    // final String
+    //         dirValidCommon =
+    //         MTGPICS_DIR + "valid/common";
 
-    final String
-            dirValidUncommon =
-            MTGPICS_DIR + "valid\\uncommon\\";
+    // final String
+    //         dirValidUncommon =
+    //         MTGPICS_DIR + "valid/uncommon";
+
+    final String[] rarities = [ "common", "uncommon", "rare", "mythic"];
+    final String[] tv = [ "train", "valid" ];
+    final List<String> rarityPaths = new ArrayList<>();
+
+    for ( i = 0; i < rarities.length; i++) {
+      rarityPaths.add(L_MTGPICS_DIR + rarities[i]);
+    }
 
     try {
       //
@@ -102,26 +112,26 @@ public class Main {
 
           // Roughly a 20% of the images will go to the valid directory
           // and the other 80% to the train directory.
-          if (count % 5 == 0) {
-            count++;
-             destDirCommon = dirFileValidCommon;
-             destDirUnCommon = dirFileValidUncommon;
-          } else {
-            destDirCommon = dirFileTrainCommon;
-            destDirUnCommon = dirFileTrainUncommon;
-          }
+          // if (count % 5 == 0) {
+          //   count++;
+          //    destDirCommon = dirFileValidCommon;
+          //    destDirUnCommon = dirFileValidUncommon;
+          // } else {
+          //   destDirCommon = dirFileTrainCommon;
+          //   destDirUnCommon = dirFileTrainUncommon;
+          // }
 
           // This gets images based on the existence of the rarity tag.
           if (object.has("rarity")) {
             String rarityLevel = object.get("rarity").getAsString();
             String imageURI = getPNGImageURI(object);
 
-            // We're looking at cards of rarity common and uncommon.
-            if (rarityLevel.equalsIgnoreCase("common")) {
 
-              String imgFilename = object.get("name").getAsString() + ".png";
-              destFile =
-                new File(destDirCommon, imgFilename);
+            for (i = 0; i < rarities.length; i++) {
+              if(rarityLevel.equalsIgnoreCase(rarities[i])) {
+                String imgFilename = object.get("name").getAsString() + ".png";
+                destFile =
+                new File(rarityPaths.get(i), imgFilename);
 
               if (destFile.exists()) {
                 System.out.println("Already have img.");
@@ -129,38 +139,13 @@ public class Main {
               }
 
               FileUtils.copyURLToFile(new URL(imageURI), destFile,
-                // connect timeout 5min
-                (1_000 * 60 * 5),
-                // read timeout 5min
-                (1_000 * 60 * 5));
-
-
-              System.out.println("common");
-              System.out.println(destDirCommon.toString());
-              System.out.println(imageURI);
-              System.out.println();
-
-            } else if (rarityLevel.equalsIgnoreCase("uncommon")) {
-
-              String imgFilename = object.get("name").getAsString() + ".png";
-              destFile =
-                new File(destDirUnCommon, imgFilename);
-
-              if (destFile.exists()) {
-                System.out.println("Already have img.");
-                continue;
+                // connect timeout 1min
+                (1_000 * 60 * 1),
+                // read timeout 1min
+                (1_000 * 60 * 1));
               }
 
-              FileUtils.copyURLToFile(new URL(imageURI),
-                destFile,
-                (1_000 * 60 * 5),
-                // connect timeout 5min
-                (1_000 * 60 * 5)
-                // read timeout 5min
-              );
-
-              System.out.println("uncommon");
-              System.out.println(destDirUnCommon.toString());
+              System.out.println(destFile.toString());
               System.out.println(imageURI);
               System.out.println();
             }
@@ -207,5 +192,25 @@ public class Main {
     }
 
     return imageurisobject.get("png").getAsString();
+  }
+
+  private static String getArtCropURI(JsonObject jsonObject) {
+    if (!jsonObject.has("image_uris")) {
+      throw new IllegalArgumentException();
+    }
+
+    JsonElement imageURISJSONObject = jsonObject.get("image_uris");
+
+    if (!imageURISJSONObject.isJsonObject()) {
+      throw new IllegalArgumentException();
+    }
+
+    JsonObject imageurisobject = imageURISJSONObject.getAsJsonObject();
+
+    if (!imageurisobject.has("art_crop")) {
+      throw new IllegalArgumentException();
+    }
+
+    return imageurisobject.get("art_crop").getAsString();
   }
 }
