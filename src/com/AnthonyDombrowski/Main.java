@@ -49,8 +49,8 @@ public class Main {
     //         dirValidUncommon =
     //         MTGPICS_DIR + "valid/uncommon";
 
-    final String[] rarities = [ "common", "uncommon", "rare", "mythic"];
-    final String[] tv = [ "train", "valid" ];
+    final String[] rarities = { "common", "uncommon", "rare", "mythic"};
+    final String[] tv = { "train", "valid" };
     final List<String> rarityPaths = new ArrayList<>();
 
     for ( i = 0; i < rarities.length; i++) {
